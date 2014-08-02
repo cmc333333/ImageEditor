@@ -1,4 +1,6 @@
-Button b;
+PImage editing, segment;
+
+Button b, loadImage;
 Toggle t;
 Toggle t2;
 Slider s, sup, sdown;
@@ -8,8 +10,9 @@ RadioButtons r2;
 
 void setup()
 {
-   size(640, 480);
+   size(650, 700);
    
+   loadImage = new Button("Load Image", (width - 100)/2, height - 35, 100, 25);
    PImage ButtonInactive = loadImage("ButtonInactive.png");
    PImage ButtonActive = loadImage("ButtonActive.png");
    
@@ -66,6 +69,7 @@ void draw()
      ellipse(width/2, height/2, s.get(), s.get());
    }
    
+   loadImage.display();
    b.display();
    t.display();
    t2.display();
@@ -76,13 +80,29 @@ void draw()
    msvert.display();
    r.display();
    r2.display();
+
+   if (editing != null) {
+     image(editing, (width - editing.width) / 2, 0);
+   }
+}
+
+void fileSelected(File selection) {
+  if (selection != null) {
+    editing = loadImage(selection.getAbsolutePath());
+    if (editing.width > width) {
+      editing.resize(width, 0);
+    }
+    if (editing.height > height - 50) {
+      editing.resize(0, height - 50);
+    }
+  }
 }
 
 void mousePressed()
 {
-  if(b.mousePressed())
+  if(loadImage.mousePressed())
   {
-    println("hello");
+    selectInput("Select Image", "fileSelected");
   }  
   t.mousePressed();
   t2.mousePressed();
@@ -98,6 +118,8 @@ void mousePressed()
 
 void mouseDragged()
 {
+  loadImage.mouseDragged();
+
   t.mouseDragged();
   t2.mouseDragged();
   s.mouseDragged();
@@ -111,6 +133,8 @@ void mouseDragged()
 
 void mouseReleased()
 {
+  loadImage.mouseReleased();
+
   t.mouseReleased();
   t2.mouseReleased();
   s.mouseReleased();
