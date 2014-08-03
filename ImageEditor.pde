@@ -134,8 +134,10 @@ void setSubImage() {
     subImageLeft = dragInitX;
     subImageRight = dragEndX;
   }
-  subImageLeft = max(subImageLeft, (width - image.width) / 2);
-  subImageRight = max(subImageRight, (width - image.width) / 2);
-  subImageLeft = min(subImageLeft, (width - image.width) / 2 + image.width);
-  subImageRight = min(subImageRight, (width - image.width) / 2 + image.width);
+
+  //  Account for gutter
+  subImageLeft -= (width - image.width) / 2;
+  subImageRight -= (width - image.width) / 2;
+  subImageLeft = min(subImageLeft, image.width);
+  subImageRight = min(subImageRight, image.width);
 }
