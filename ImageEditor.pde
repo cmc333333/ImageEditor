@@ -1,4 +1,5 @@
-PImage editing, segment;
+PImage image;
+int subImageTop, subImageBottom, subImageLeft, subImageRight;
 
 Button loadImage;
 Button blackWhite, grayScale, invert, blur, erode, dilate;
@@ -33,8 +34,8 @@ void draw()
     button.display();
   }
 
-  if (editing != null) {
-    image(editing, (width - editing.width) / 2, 0);
+  if (image != null) {
+    image(image, (width - image.width) / 2, 0);
   }
 
   noFill();
@@ -52,26 +53,36 @@ void draw()
 
 void fileSelected(File selection) {
   if (selection != null) {
-    editing = loadImage(selection.getAbsolutePath());
-    if (editing.width > width) {
-      editing.resize(width, 0);
+    image = loadImage(selection.getAbsolutePath());
+    if (image.width > width) {
+      image.resize(width, 0);
     }
-    if (editing.height > height - 50) {
-      editing.resize(0, height - 50);
+    if (image.height > height - 50) {
+      image.resize(0, height - 50);
     }
   }
 }
 
 void mousePressed()
 {
-  dragInitX = mouseX;
-  dragInitY = mouseY;
+  if (dragState == NOSELECTION) {
+    dragInitX = mouseX;
+    dragInitY = mouseY;
+  }
   if (loadImage.mousePressed()) {
     selectInput("Select Image", "fileSelected");
   }  
   for (int i = 1; i < FILTERS.length; i++) {
-    if (editing != null && allButtons[i].mousePressed()) {
-      editing.filter(FILTERS[i]);
+    if (image != null && allButtons[i].mousePressed()) {
+      if (dragState == AREASELECTED) {
+        PImage subImage = image.get(subImageLeft, subImageTop,
+                                    subImageRight - subImageLeft,
+                                    subImageBottom - subImageTop);
+        subImage.filter(FILTERS[i]);
+        image.set(subImageLeft, subImageTop, subImage);
+      } else {
+        image.filter(FILTERS[i]);
+      }
     }
   }
 }
@@ -89,12 +100,42 @@ void mouseDragged()
 
 void mouseReleased()
 {
-  if (dragState == DRAGGING) {
-    dragState = AREASELECTED;
-  } else {
-    dragState = NOSELECTION;
-  }
+  boolean buttonClicked = false;
   for (Button button : allButtons) {
-    button.mouseReleased();
+    buttonClicked = button.mouseReleased() || buttonClicked;
   }
+  if (!buttonClicked) {
+    if (dragState == DRAGGING) {
+      dragState = AREASELECTED;
+      if (image != null) {
+        setSubImage();
+      }
+    } else {
+      dragState = NOSELECTION;
+    }
+  }
+}
+
+void setSubImage() {
+  if (dragInitY > dragEndY) {
+    subImageTop = dragEndY;
+    subImageBottom = dragInitY;
+  } else {
+    subImageTop = dragInitY;
+    subImageBottom = dragEndY;
+  }
+  subImageTop = min(subImageTop, image.height);
+  subImageBottom = min(subImageBottom, image.height);
+
+  if (dragInitX > dragEndX) {
+    subImageLeft = dragEndX;
+    subImageRight = dragInitX;
+  } else {
+    subImageLeft = dragInitX;
+    subImageRight = dragEndX;
+  }
+  subImageLeft = max(subImageLeft, (width - image.width) / 2);
+  subImageRight = max(subImageRight, (width - image.width) / 2);
+  subImageLeft = min(subImageLeft, (width - image.width) / 2 + image.width);
+  subImageRight = min(subImageRight, (width - image.width) / 2 + image.width);
 }
