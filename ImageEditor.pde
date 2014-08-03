@@ -2,10 +2,12 @@ PImage editing, segment;
 
 Button loadImage;
 Button blackWhite, grayScale, invert, blur, erode, dilate;
+int[] FILTERS = new int[] {-1, THRESHOLD, GRAY, INVERT, BLUR, ERODE, DILATE};
 Button[] allButtons;
 
-int dragInitX, dragInitY;
-boolean isDragging = false;
+int dragInitX, dragInitY, dragEndX, dragEndY;
+final int NOSELECTION = 0, DRAGGING = 1, AREASELECTED = 2;
+int dragState = NOSELECTION;
 
 void setup()
 {
@@ -35,9 +37,16 @@ void draw()
     image(editing, (width - editing.width) / 2, 0);
   }
 
-  if (isDragging) {
-    noFill();
-    rect(dragInitX, dragInitY, mouseX - dragInitX, mouseY - dragInitY);
+  noFill();
+  switch (dragState) {
+    case DRAGGING:
+      stroke(0);
+      rect(dragInitX, dragInitY, dragEndX - dragInitX, dragEndY - dragInitY);
+      break;
+    case AREASELECTED:
+      stroke(0, 0, 220);
+      rect(dragInitX, dragInitY, dragEndX - dragInitX, dragEndY - dragInitY);
+      break;
   }
 }
 
@@ -60,19 +69,9 @@ void mousePressed()
   if (loadImage.mousePressed()) {
     selectInput("Select Image", "fileSelected");
   }  
-  if (editing != null) {
-    if (blackWhite.mousePressed()) {
-      editing.filter(THRESHOLD);
-    } else if (grayScale.mousePressed()) {
-      editing.filter(GRAY);
-    } else if (invert.mousePressed()) {
-      editing.filter(INVERT);
-    } else if (blur.mousePressed()) {
-      editing.filter(BLUR);
-    } else if (erode.mousePressed()) {
-      editing.filter(ERODE);
-    } else if (dilate.mousePressed()) {
-      editing.filter(DILATE);
+  for (int i = 1; i < FILTERS.length; i++) {
+    if (editing != null && allButtons[i].mousePressed()) {
+      editing.filter(FILTERS[i]);
     }
   }
 }
@@ -80,7 +79,9 @@ void mousePressed()
 
 void mouseDragged()
 {
-  isDragging = true;
+  dragEndX = mouseX;
+  dragEndY = mouseY;
+  dragState = DRAGGING;
   for (Button button : allButtons) {
     button.mouseDragged();
   }
@@ -88,7 +89,11 @@ void mouseDragged()
 
 void mouseReleased()
 {
-  isDragging = false;
+  if (dragState == DRAGGING) {
+    dragState = AREASELECTED;
+  } else {
+    dragState = NOSELECTION;
+  }
   for (Button button : allButtons) {
     button.mouseReleased();
   }
